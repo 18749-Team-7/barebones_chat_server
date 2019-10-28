@@ -7,6 +7,7 @@ Barebones implementation of a single-server multiple-client UDP chat server for 
 <!--ts-->
    * [Dependencies](#dependencies)
    * [Running the code](#running)
+   * [TODO](#todo)
 <!--te-->
 
 <a name="dependencies"></a>
@@ -25,3 +26,9 @@ sudo python3 server.py
 ```
 python3 client.py -ip <IP ADDRESS> -u <USERNAME>
 ```
+
+The port may be specified using ```-p <PORT NUMBER>``` on both client and server. The default port is 5000.
+
+<a name="todo"></a>
+## TODO
+- Colored client-side messages (fancy!)
