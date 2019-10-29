@@ -3,6 +3,8 @@ import socket
 import threading
 import os
 import time
+import tkinter as tk
+import binascii
 
 STR_ENCODING = 'utf-8'
 
@@ -25,10 +27,36 @@ UP =        "\033[A"
 def receive_thread(s):
     while(True):
         try:
-            data, addr = s.recvfrom(BUF_SIZE)
+            data, _ = s.recvfrom(BUF_SIZE)
             print(data.decode(STR_ENCODING))
         except:
             pass
+
+def setup_chat_window(s, ip, port, username):
+    # Create a window
+    top = tk.Tk()
+    top.title(username)
+
+    # Create input text field
+    input_user = tk.StringVar()
+    input_field = tk.Entry(top, text=input_user)
+    input_field.pack(side=tk.BOTTOM, fill=tk.X)
+
+    # Inline function
+    def send_msg(event = None):
+        message = input_field.get()
+        input_user.set('')
+
+        if (message):
+            print(UP) # Cover input() line with the chat line from the server.
+            s.sendto(message.encode(STR_ENCODING), (ip, port))
+        return "break"
+
+    # Create the frame for the text field
+    input_field.bind("<Return>", send_msg)
+
+    # Start the chat window
+    top.mainloop()
 
 def udp_client(ip, port, username):
     try:
@@ -42,34 +70,46 @@ def udp_client(ip, port, username):
         threading.Thread(target=receive_thread,args=(s,)).start()
 
         # Chat!
-        while(True):
-            message = input()
-            if (message):
-                print(UP) # Cover input() line with the chat line from the server.
-                s.sendto(message.encode(STR_ENCODING), (ip, port))
+        # Create a window for the input field for messages
+        setup_chat_window(s, ip, port, username)
+
+        # Closing
+        logout_packet = LOGOUT_STR + username
+        s.sendto(logout_packet.encode(STR_ENCODING), (ip, port))
+        s.close()
+        return
 
     # Press ctrl + c to log out
     except KeyboardInterrupt:
         logout_packet = LOGOUT_STR + username
         s.sendto(logout_packet.encode(STR_ENCODING), (ip, port))
         s.close()
-        os._exit(1)
+        return
 
 
 def get_args():
     parser = argparse.ArgumentParser()
 
+    # IP, PORT, Username
     parser.add_argument('-ip', '--ip', help="Server IP Address", required=True)
     parser.add_argument('-p', '--port', help="Server Port", type=int, default=5000)
     parser.add_argument('-u', '--username', help="Chat user/display name", required=True)
     
+    # Parse the arguments
     args = parser.parse_args()
     return args
 
 if __name__ == '__main__':
     start_time = time.time()
 
+    # Extract Arguments from the 
     args = get_args()
+
+    # Start the Client
     udp_client(args.ip, args.port, args.username)
 
-    print("\nTotal time taken: " + str(time.time() - start_time) + " seconds")
+    # Total client up time
+    print("\nClient up time: {} seconds".format(time.time() - start_time))
+
+    # Exit
+    os._exit(1)
