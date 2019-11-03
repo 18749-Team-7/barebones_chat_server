@@ -1,7 +1,7 @@
 # Barebones single-server multiple-client UDP chat server
 
 ## Introduction
-Barebones implementation of a single-server multiple-client UDP chat server for the 18-749 (Building Reliable Distributed Systems) project. Operation is as simple as can be: users connect to the server with a username and begin chatting. That's it! 
+Barebones implementation of a single-server multiple-client TCPIP chat server for the 18-749 (Building Reliable Distributed Systems) project. Operation is as simple as can be: users connect to the server with a username and begin chatting. That's it! 
 
 ## Table of contents
 <!--ts-->
@@ -32,3 +32,5 @@ The port may be specified using ```-p <PORT NUMBER>``` on both client and server
 <a name="todo"></a>
 ## TODO
 - Colored client-side messages (fancy!)
+- Heart beats thread to Replication manager
+- Discovery process with Replication manager
