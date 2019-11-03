@@ -27,7 +27,7 @@ UP =        "\033[A"
 def receive_thread(s):
     while(True):
         try:
-            data, _ = s.recvfrom(BUF_SIZE)
+            data = s.recv(BUF_SIZE)
             print(data.decode(STR_ENCODING))
         except:
             pass
@@ -49,42 +49,41 @@ def setup_chat_window(s, ip, port, username):
 
         if (message):
             print(UP) # Cover input() line with the chat line from the server.
-            s.sendto(message.encode(STR_ENCODING), (ip, port))
+            s.send(message.encode(STR_ENCODING))
         return "break"
 
     # Create the frame for the text field
     input_field.bind("<Return>", send_msg)
 
+    # Add an escape condition
+    def destroy(e):
+        top.destroy()
+    top.bind("<Escape>", destroy)
+
     # Start the chat window
     top.mainloop()
 
-def udp_client(ip, port, username):
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # IPv4, UDP
+def tcp_client(ip, port, username):
+    # Get a socket to connect to the server
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # IPv4, TCPIP
+    s.connect((ip, port))
 
-        # Log in to chat server
-        login_packet = LOGIN_STR + username
-        s.sendto(login_packet.encode(STR_ENCODING), (ip, port))
+    # Log in to chat server
+    login_packet = LOGIN_STR + username
+    s.send(login_packet.encode(STR_ENCODING))
 
-        # Spawn thread to handle printing received messages
-        threading.Thread(target=receive_thread,args=(s,)).start()
+    # Spawn thread to handle printing received messages
+    threading.Thread(target=receive_thread,args=(s,)).start()
 
-        # Chat!
-        # Create a window for the input field for messages
-        setup_chat_window(s, ip, port, username)
+    # Chat!
+    # Create a window for the input field for messages
+    setup_chat_window(s, ip, port, username)
 
-        # Closing
-        logout_packet = LOGOUT_STR + username
-        s.sendto(logout_packet.encode(STR_ENCODING), (ip, port))
-        s.close()
-        return
-
-    # Press ctrl + c to log out
-    except KeyboardInterrupt:
-        logout_packet = LOGOUT_STR + username
-        s.sendto(logout_packet.encode(STR_ENCODING), (ip, port))
-        s.close()
-        return
+    # Closing
+    logout_packet = LOGOUT_STR + username
+    s.send(logout_packet.encode(STR_ENCODING))
+    s.close()
+    return
 
 
 def get_args():
@@ -106,7 +105,7 @@ if __name__ == '__main__':
     args = get_args()
 
     # Start the Client
-    udp_client(args.ip, args.port, args.username)
+    tcp_client(args.ip, args.port, args.username)
 
     # Total client up time
     print("\nClient up time: {} seconds".format(time.time() - start_time))
