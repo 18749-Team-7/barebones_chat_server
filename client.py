@@ -4,7 +4,6 @@ import threading
 import os
 import time
 import tkinter as tk
-import binascii
 
 STR_ENCODING = 'utf-8'
 
@@ -24,11 +23,14 @@ WHITE =     "\u001b[37m"
 RESET =     "\u001b[0m"
 UP =        "\033[A"
 
+TIMEOUT = 5
+
 def receive_thread(s):
     while(True):
         try:
             data = s.recv(BUF_SIZE)
-            print(data.decode(STR_ENCODING))
+            if (len(data) != 0):
+                print(data.decode(STR_ENCODING))
         except:
             pass
 
@@ -49,7 +51,10 @@ def setup_chat_window(s, ip, port, username):
 
         if (message):
             print(UP) # Cover input() line with the chat line from the server.
-            s.send(message.encode(STR_ENCODING))
+            try:
+                s.send(message.encode(STR_ENCODING))
+            except:
+                print(RED + "Error: Connection closed unexpectedly")
         return "break"
 
     # Create the frame for the text field
@@ -70,7 +75,10 @@ def tcp_client(ip, port, username):
 
     # Log in to chat server
     login_packet = LOGIN_STR + username
-    s.send(login_packet.encode(STR_ENCODING))
+    try:
+        s.send(login_packet.encode(STR_ENCODING))
+    except:
+        print(RED + "Error: Connection closed unexpectedly")
 
     # Spawn thread to handle printing received messages
     threading.Thread(target=receive_thread,args=(s,)).start()
@@ -81,8 +89,11 @@ def tcp_client(ip, port, username):
 
     # Closing
     logout_packet = LOGOUT_STR + username
-    s.send(logout_packet.encode(STR_ENCODING))
-    s.close()
+    try:
+        s.send(logout_packet.encode(STR_ENCODING))
+        s.close()
+    except: 
+        print(RED + "Error: Connection closed unexpectedly")
     return
 
 
@@ -108,7 +119,7 @@ if __name__ == '__main__':
     tcp_client(args.ip, args.port, args.username)
 
     # Total client up time
-    print("\nClient up time: {} seconds".format(time.time() - start_time))
+    print(RESET + "\nClient up time: {} seconds".format(time.time() - start_time))
 
     # Exit
     os._exit(1)
